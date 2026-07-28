@@ -1,0 +1,98 @@
+# SCADA data logger configuration.
+# Everything device- and site-specific lives here, so adding a new station or
+# tag is a config change, not a code change.
+
+database:
+  path: data/scada.db
+  # Rows older than this are purged on startup and once per day.
+  retention_days: 90
+
+collector:
+  poll_interval_seconds: 2.0
+  # Seconds to wait before retrying a device that failed to respond.
+  reconnect_backoff_seconds: 5.0
+  request_timeout_seconds: 3.0
+
+devices:
+  - name: pump_station_1
+    label: "Terfi Merkezi 1"
+    host: 127.0.0.1
+    port: 5020
+    device_id: 1
+    tags:
+      - name: suction_pressure
+        label: "Emiş Basıncı"
+        unit: "bar"
+        type: holding
+        address: 0
+        scale: 0.01
+        min_warn: 0.8
+
+      - name: discharge_pressure
+        label: "Basma Basıncı"
+        unit: "bar"
+        type: holding
+        address: 1
+        scale: 0.01
+        max_warn: 6.5
+
+      - name: flow_rate
+        label: "Debi"
+        unit: "m3/h"
+        type: holding
+        address: 2
+        scale: 0.1
+
+      - name: motor_current
+        label: "Motor Akımı"
+        unit: "A"
+        type: holding
+        address: 3
+        scale: 0.1
+        max_warn: 32.0
+
+      - name: motor_frequency
+        label: "Motor Frekansı"
+        unit: "Hz"
+        type: holding
+        address: 4
+        scale: 0.1
+
+      - name: tank_level
+        label: "Depo Seviyesi"
+        unit: "%"
+        type: holding
+        address: 5
+        scale: 0.1
+        min_warn: 20.0
+        max_warn: 95.0
+
+      - name: total_volume
+        label: "Toplam Hacim"
+        unit: "m3"
+        type: holding
+        address: 6
+        scale: 1.0
+        width: 32          # two consecutive registers, low word first
+
+      - name: pump_running
+        label: "Pompa Çalışıyor"
+        type: discrete
+        address: 0
+
+      - name: pump_fault
+        label: "Pompa Arıza"
+        type: discrete
+        address: 1
+        alarm_on_true: true
+
+      - name: low_level_switch
+        label: "Alt Seviye Şalteri"
+        type: discrete
+        address: 2
+        alarm_on_true: true
+
+      - name: high_level_switch
+        label: "Üst Seviye Şalteri"
+        type: discrete
+        address: 3
