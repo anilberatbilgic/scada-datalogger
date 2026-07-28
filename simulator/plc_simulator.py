@@ -139,10 +139,20 @@ async def main(host: str, port: int, interval: float) -> None:
     server = ModbusTcpServer(context=context, address=(host, port))
     model = StationModel()
 
-    log.info("PLC simulator listening on %s:%s", host, port)
     task = asyncio.create_task(update_loop(server, model, interval))
     try:
+        log.info("PLC simulator starting on %s:%s", host, port)
         await server.serve_forever()
+    except RuntimeError:
+        # pymodbus reports a failed bind as a bare RuntimeError; translate it
+        # into something a user can act on.
+        log.error(
+            "cannot bind %s:%s - the port is in use, or still in TIME_WAIT from a "
+            "previous run. Wait a few seconds, or start with --port <other>.",
+            host,
+            port,
+        )
+        raise SystemExit(1) from None
     finally:
         task.cancel()
 
@@ -161,3 +171,5 @@ if __name__ == "__main__":
         asyncio.run(main(args.host, args.port, args.interval))
     except KeyboardInterrupt:
         log.info("simulator stopped")
+    except SystemExit as exc:
+        raise SystemExit(exc.code) from None
